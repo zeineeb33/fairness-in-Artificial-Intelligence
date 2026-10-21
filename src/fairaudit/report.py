@@ -1,6 +1,6 @@
 """Typed audit-report schema, shared by the library, the CLI and the API."""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 Rate = (
     float | None
@@ -106,8 +106,10 @@ class AuditReport(BaseModel):
     attributes: list[AttributeReport]
     warnings: list[str] = Field(default_factory=list)
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def findings(self) -> list[str]:
+        """Every attribute's findings, prefixed with the attribute name."""
         return [f"[{a.attribute}] {f}" for a in self.attributes for f in a.findings]
 
     def attribute(self, name: str) -> AttributeReport:

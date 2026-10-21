@@ -115,3 +115,26 @@ def train(
             f"{row.experiment:<16} {row.accuracy or 0:>8.4f} {row.roc_auc or 0:>8.4f} "
             f"{row.disparate_impact_ratio or 0:>14.3f}"
         )
+
+
+@app.command()
+def serve(
+    host: Annotated[str | None, typer.Option(help="Bind address [default: settings].")] = None,
+    port: Annotated[int | None, typer.Option(help="Port [default: $PORT or 8000].")] = None,
+) -> None:
+    """Serve the HTTP API and web UI with uvicorn."""
+    try:
+        import uvicorn
+    except ImportError as exc:  # pragma: no cover - depends on the installed extras
+        typer.echo("Serving needs the API dependencies: install fairaudit[api].", err=True)
+        raise typer.Exit(code=2) from exc
+
+    settings = get_settings()
+    uvicorn.run(
+        "fairaudit.api.app:app",
+        host=host or settings.host,
+        port=port or settings.port,
+        log_level=settings.log_level.lower(),
+        proxy_headers=True,  # Render terminates TLS in front of the container
+        forwarded_allow_ips="*",
+    )

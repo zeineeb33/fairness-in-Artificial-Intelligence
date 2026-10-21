@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>fairaudit</title>
+  <meta name="description" content="Group-fairness audits for binary classifiers.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='8' width='3' height='7' rx='1' fill='%232a78d6'/%3E%3Crect x='6.5' y='4' width='3' height='11' rx='1' fill='%232a78d6'/%3E%3Crect x='12' y='6' width='3' height='9' rx='1' fill='%232a78d6'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <header class="top">
+    <div class="wrap top-row">
+      <div>
+        <h1>fairaudit</h1>
+        <p class="tagline">Group-fairness audits for binary classifiers</p>
+      </div>
+      <nav class="links">
+        <a href="/docs">API docs</a>
+        <a href="https://github.com/zeineeb33/fairness-in-Artificial-Intelligence">GitHub</a>
+      </nav>
+    </div>
+    <div class="wrap">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab-audit" aria-controls="panel-audit" aria-selected="true">Audit a model</button>
+        <button class="tab" role="tab" id="tab-study" aria-controls="panel-study" aria-selected="false">ChestX-ray14 case study</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="panel-audit" role="tabpanel" aria-labelledby="tab-audit">
+      <form id="audit-form" class="card" novalidate>
+        <h2>1. Data</h2>
+        <p class="hint">A CSV with one row per sample: the true label, the model's prediction and/or score, and the sensitive attributes. Files stay in memory and are not stored.</p>
+        <div class="row">
+          <label class="file">
+            <input type="file" id="file" accept=".csv,text/csv">
+            <span id="file-name">Choose a CSV file</span>
+          </label>
+          <button type="button" id="use-sample" class="secondary">Use the ChestX-ray14 sample</button>
+        </div>
+
+        <fieldset id="mapping" disabled>
+          <h2>2. Columns</h2>
+          <div class="grid">
+            <label>Label (ground truth)<select id="label" required></select></label>
+            <label>Prediction (0/1)<select id="prediction"></select></label>
+            <label>Score (probability)<select id="score"></select></label>
+            <label>Threshold on score<input id="threshold" type="number" min="0" max="1" step="0.01" value="0.5"></label>
+            <label>Positive label (optional)<input id="positive-label" type="text" placeholder="e.g. Finding"></label>
+          </div>
+          <div class="sensitive">
+            <span class="legend-title">Sensitive attributes</span>
+            <div id="sensitive" class="checks"></div>
+          </div>
+          <button type="submit" id="run">Run audit</button>
+        </fieldset>
+        <p id="form-error" class="error" role="alert" hidden></p>
+      </form>
+
+      <div id="audit-result" aria-live="polite"></div>
+    </section>
+
+    <section id="panel-study" role="tabpanel" aria-labelledby="tab-study" hidden>
+      <div id="study-result"><p class="hint">Loading…</p></div>
+    </section>
+  </main>
+
+  <div id="tooltip" class="tooltip" role="status" hidden></div>
+</body>
+</html>

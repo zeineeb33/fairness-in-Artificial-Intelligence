@@ -88,7 +88,11 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra --strict-markers"
-filterwarnings = ["error::DeprecationWarning:fairaudit.*"]
+filterwarnings = [
+    "error::DeprecationWarning:fairaudit.*",
+    # Starlette's TestClient nudges towards another HTTP client; httpx is still supported.
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated",
+]
 
 [tool.coverage.run]
 source = ["fairaudit"]
