@@ -1,0 +1,16 @@
+# Render Blueprint: Dashboard -> New -> Blueprint -> select this repository.
+services:
+  - type: web
+    name: fairaudit
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: FAIRAUDIT_LOG_LEVEL
+        value: INFO
+      - key: FAIRAUDIT_MAX_UPLOAD_MB
+        value: "10"
