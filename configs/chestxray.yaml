@@ -1,0 +1,25 @@
+# ChestX-ray14 metadata fairness case study: `uv run fairaudit train --config configs/chestxray.yaml`
+data_path: data/JEMLI_ZEINEB.csv
+seed: 42
+
+# Patient-level split: shares of patients held out for testing and for threshold tuning.
+test_size: 0.2
+val_size: 0.2
+
+# Rows with a larger age are data-entry errors in the source metadata (e.g. 412).
+max_age: 100
+
+# Attribute the mitigations target (the original notebook studied age 50-70 vs the rest).
+target_attribute: age_50_70
+audit_attributes: [gender, age_50_70, age_group, view_position]
+
+threshold: 0.5
+tree_max_depth: 3   # as in the notebook
+pca_components: 5   # as in the notebook
+
+policy:
+  min_disparate_impact: 0.8   # four-fifths rule
+  max_difference: 0.1         # max acceptable TPR / FPR / PPV gap
+  max_calibration_gap: 0.05
+  amplification_margin: 0.05
+  min_group_size: 30

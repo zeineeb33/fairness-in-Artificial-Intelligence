@@ -1,0 +1,55 @@
+{% set cfg = results.config %}
+{% set ds = results.dataset %}
+{% set target = cfg.target_attribute %}
+# Model card: ChestX-ray14 metadata classifiers (fairness case study)
+
+## Model details
+
+- **Developer:** Zeineb Jemli, as part of fairaudit {{ results.fairaudit_version }} (MIT license).
+- **Models:** scikit-learn logistic regression (baseline and {{ results.experiments | length - 2 }} mitigated variants) and a depth-{{ cfg.tree_max_depth }} decision tree that replicates the original university notebook.
+- **Inputs:** follow-up number, patient age and age group, patient sex, view position (PA/AP), original image width/height and pixel spacing. No pixels.
+- **Output:** probability that an image has at least one of the 14 ChestX-ray14 findings rather than "No Finding".
+
+## Intended use
+
+- **Intended:** demonstrating and testing fairness auditing and bias mitigation on a real, public medical dataset.
+- **Out of scope:** any clinical, diagnostic, triage or screening use. The models never see the image and are only slightly better than chance (ROC AUC around {{ baseline.report.overall.roc_auc | num(2) }}).
+
+## Training and evaluation data
+
+- NIH ChestX-ray14 metadata (`{{ ds.source }}`, sha256 `{{ ds.sha256[:16] }}`): {{ ds.n_rows }} images of {{ ds.n_patients }} patients after removing {{ ds.n_dropped_implausible_age }} rows with an implausible age.
+- Labels were text-mined from radiology reports by the dataset authors (Wang et al., CVPR 2017), so they are noisy.
+- Patient-level split, seed {{ cfg.seed }}: {% for name, s in results.splits.items() %}{{ name }} {{ s.n_rows }} images / {{ s.n_patients }} patients{{ ", " if not loop.last else "." }}{% endfor %}
+
+
+## Metrics (test patients)
+
+| Model | Accuracy | ROC AUC | DI ratio `{{ target }}` | EOdds diff. `{{ target }}` | Passes four-fifths rule |
+|---|---:|---:|---:|---:|---|
+{% for e in results.experiments %}
+{% set r = rows[e.name][target] %}
+| {{ e.title }} | {{ r.accuracy | num }} | {{ r.roc_auc | num }} | {{ r.disparate_impact_ratio | num(2) }} | {{ r.equalized_odds_difference | num }} | {{ "yes" if e.report.attribute(target).passes_four_fifths_rule else "no" }} |
+{% endfor %}
+
+## Fairness considerations
+
+- Sensitive attributes audited: {% for a in cfg.audit_attributes %}`{{ a }}`{{ ", " if not loop.last else "." }}{% endfor %} Mitigations target `{{ target }}`.
+{% if recommended %}
+- Best accuracy among models passing the four-fifths rule on `{{ target }}`: **{{ recommended.title }}**; accuracy differences below {{ noise | num }} are within sampling noise.
+{% endif %}
+- Baseline findings ({{ baseline.title }}):
+{% for f in baseline.report.findings %}
+  - {{ f }}
+{% endfor %}
+
+## Caveats and recommendations
+
+- Removing a sensitive attribute ("unawareness") does not remove its proxies; audit the outcome, not the inputs.
+- Making one attribute fair can leave others unfair: compare the per-attribute tables in the study report.
+- Group-specific thresholds treat groups differently by design, which may be inappropriate or unlawful in some settings.
+- In a diagnostic setting, missed findings (low TPR, i.e. under-diagnosis) are usually the costliest error, so the equal opportunity gap deserves the most weight.
+- Sex is recorded as binary (M/F) in the source data. Metrics are point estimates on {{ results.splits["test"].n_rows }} test images, without confidence intervals.
+
+## Reproducibility
+
+`uv run fairaudit train --config configs/chestxray.yaml` (fairaudit {{ results.fairaudit_version }}, seed {{ cfg.seed }}).

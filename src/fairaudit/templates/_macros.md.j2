@@ -1,0 +1,38 @@
+{% macro overall_table(o) %}
+| Accuracy | Balanced acc. | ROC AUC | TPR | FPR | PPV | Selection rate | Base rate |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| {{ o.accuracy | num }} | {{ o.balanced_accuracy | num }} | {{ o.roc_auc | num }} | {{ o.tpr | pct }} | {{ o.fpr | pct }} | {{ o.ppv | pct }} | {{ o.selection_rate | pct }} | {{ o.base_rate | pct }} |
+{% endmacro %}
+
+{% macro check(value, limit) %}{% if value is none %}n/a{% elif value > limit %}FAIL (> {{ limit }}){% else %}ok (<= {{ limit }}){% endif %}{% endmacro %}
+
+{% macro attribute_section(attr, policy, level="###") %}
+{{ level }} `{{ attr.attribute }}`
+
+| Metric | Value | Policy |
+|---|---:|---|
+| Disparate impact ratio (min / max selection rate) | {{ attr.disparate_impact_ratio | num }} | {% if attr.passes_four_fifths_rule is none %}n/a{% elif attr.passes_four_fifths_rule %}PASS (>= {{ policy.min_disparate_impact }}){% else %}FAIL (< {{ policy.min_disparate_impact }}){% endif %} |
+| Demographic parity difference | {{ attr.demographic_parity_difference | num }} | |
+| Equal opportunity difference (TPR gap) | {{ attr.equal_opportunity_difference | num }} | {{ check(attr.equal_opportunity_difference, policy.max_difference) }} |
+| False-positive-rate difference | {{ attr.false_positive_rate_difference | num }} | {{ check(attr.false_positive_rate_difference, policy.max_difference) }} |
+| Equalized odds difference | {{ attr.equalized_odds_difference | num }} | |
+| Predictive parity difference (PPV gap) | {{ attr.predictive_parity_difference | num }} | |
+| Base-rate difference (in the labels) | {{ attr.base_rate_difference | num }} | |
+{% if attr.calibration_gap is not none %}
+| Calibration gap (ECE max - min) | {{ attr.calibration_gap | num }} | {{ check(attr.calibration_gap, policy.max_calibration_gap) }} |
+{% endif %}
+
+| Group | n | Base rate | Selection rate | TPR | FPR | PPV | Accuracy | ECE |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+{% for g in attr.groups %}
+| {{ g.group | md }}{{ " (small)" if g.small_sample else "" }} | {{ g.n }} | {{ g.base_rate | pct }} | {{ g.selection_rate | pct }} | {{ g.tpr | pct }} | {{ g.fpr | pct }} | {{ g.ppv | pct }} | {{ g.accuracy | pct }} | {{ g.ece | num }} |
+{% endfor %}
+
+{% if attr.findings %}
+{% for f in attr.findings %}
+- {{ f }}
+{% endfor %}
+{% else %}
+- No metric breaches the policy.
+{% endif %}
+{% endmacro %}
