@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/zeineeb33/fairness-in-Artificial-Intelligence/actions/workflows/ci.yml/badge.svg)](https://github.com/zeineeb33/fairness-in-Artificial-Intelligence/actions/workflows/ci.yml)
 
+**Live demo:** https://fairaudit-uwq7.onrender.com (free Render instance: the first request after a period of inactivity can take up to a minute while it wakes up) · [API docs](https://fairaudit-uwq7.onrender.com/docs)
+
 `fairaudit` is a Python library, CLI and web service that audits a binary classifier for
 group fairness: per-group error rates, disparity metrics (disparate impact with the 80% rule,
 demographic parity, equal opportunity, equalized odds), calibration by group, and findings in
