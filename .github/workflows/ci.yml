@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.22"
+          python-version: "3.12"
+          enable-cache: true
+      - name: Install
+        run: uv sync --frozen
+      - name: Lint
+        run: uv run ruff check .
+      - name: Format
+        run: uv run ruff format --check .
+      - name: Type-check
+        run: uv run mypy
+      - name: Test
+        run: uv run pytest --cov --cov-report=term-missing
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image (trains the case study)
+        run: docker build -t fairaudit:ci .
+      - name: Smoke test
+        run: |
+          docker run -d --name fairaudit -e PORT=10000 -p 10000:10000 fairaudit:ci
+          for i in $(seq 1 30); do curl -fsS localhost:10000/health && break; sleep 1; done
+          curl -fsS localhost:10000/case-study > /dev/null
+          docker stats --no-stream fairaudit
