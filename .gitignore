@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Environments
+.venv/
+.env
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Generated outputs (reproducible with `fairaudit train` / `fairaudit audit`)
+artifacts/
+models/
+mlruns/
+*.joblib
+*.pkl
+
+# Notebooks / editors / OS
+.ipynb_checkpoints/
+.idea/
+.vscode/
+.DS_Store
